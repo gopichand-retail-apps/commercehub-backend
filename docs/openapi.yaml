@@ -1,0 +1,427 @@
+openapi: 3.1.0
+info:
+  title: CommerceHub Demo API
+  version: 1.0.0
+  description: Synthetic-data storefront API. Payments are simulated; no customer identity or card data is accepted.
+servers:
+  - url: http://127.0.0.1:5302
+    description: Local Spring Boot API
+paths:
+  /health:
+    get:
+      summary: Health check
+      operationId: getHealth
+      responses:
+        "200":
+          description: Service is ready
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, service]
+                properties:
+                  status: { type: string, const: ok }
+                  service: { type: string, const: commercehub-api }
+  /api/v1/version:
+    get:
+      summary: Read the backend artifact version
+      operationId: getApplicationVersion
+      security: []
+      responses:
+        "200":
+          description: API service name and SemVer release from the Maven build.
+          headers:
+            Cache-Control:
+              schema: { type: string, const: no-store }
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [service, version]
+                properties:
+                  service: { type: string, const: commercehub-api }
+                  version: { type: string, pattern: '^\\d+\\.\\d+\\.\\d+$' }
+  /api/v1/products:
+    get:
+      summary: List available synthetic products
+      operationId: listProducts
+      parameters:
+        - in: query
+          name: q
+          schema: { type: string, maxLength: 120 }
+        - in: query
+          name: category
+          schema: { type: string, maxLength: 60 }
+      responses:
+        "200":
+          description: Catalog page
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [products]
+                properties:
+                  products:
+                    type: array
+                    items: { $ref: "#/components/schemas/Product" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+  /api/v1/products/{slug}:
+    get:
+      summary: Get one available product
+      operationId: getProduct
+      parameters:
+        - $ref: "#/components/parameters/ProductSlug"
+      responses:
+        "200":
+          description: Product
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Product" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /api/v1/sessions/roles:
+    get:
+      summary: List available local synthetic roles
+      operationId: listSyntheticRoles
+      responses:
+        "200":
+          description: Synthetic roles supported by the local API
+          headers:
+            Cache-Control:
+              schema: { type: string, const: no-store }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SyntheticRoleList" }
+  /api/v1/sessions:
+    post:
+      summary: Create a short-lived local synthetic session
+      operationId: createSyntheticSession
+      description: Creates a demo-only identity; no external identity provider or customer data is used.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SyntheticSessionRequest" }
+      responses:
+        "201":
+          description: Synthetic session created; the bearer token is returned once
+          headers:
+            Cache-Control:
+              schema: { type: string, const: no-store }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CreatedSyntheticSession" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /api/v1/sessions/current:
+    get:
+      summary: Validate the current synthetic session
+      operationId: getCurrentSyntheticSession
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Current synthetic session metadata
+          headers:
+            Cache-Control:
+              schema: { type: string, const: no-store }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CurrentSyntheticSession" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+    delete:
+      summary: Revoke the current synthetic session
+      operationId: revokeCurrentSyntheticSession
+      security:
+        - bearerAuth: []
+      responses:
+        "204":
+          description: Session revoked
+          headers:
+            Cache-Control:
+              schema: { type: string, const: no-store }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /api/v1/orders/quote:
+    post:
+      summary: Calculate a server-authoritative demo order quote
+      operationId: quoteOrder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/OrderRequest" }
+      responses:
+        "200":
+          description: Server-calculated quote
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [quote]
+                properties:
+                  quote: { $ref: "#/components/schemas/OrderQuote" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /api/v1/orders:
+    post:
+      summary: Create a simulated, idempotent demo order
+      description: Guest requests use an order access key; synthetic customer sessions bind ownership to the session.
+      operationId: createOrder
+      security:
+        - {}
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/OrderAccessKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/OrderRequest" }
+      responses:
+        "201":
+          description: New order created
+          headers:
+            Cache-Control:
+              schema: { type: string, const: no-store }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OrderResponse" }
+        "200":
+          description: Idempotent replay of the same request
+          headers:
+            Cache-Control:
+              schema: { type: string, const: no-store }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OrderResponse" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+  /api/v1/orders/{orderId}:
+    get:
+      summary: Retrieve an owned demo receipt
+      description: Guests use their access key; authenticated customers may read only their own orders.
+      operationId: getOrder
+      security:
+        - {}
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/OrderId"
+        - $ref: "#/components/parameters/OrderAccessKey"
+      responses:
+        "200":
+          description: Demo order receipt
+          headers:
+            Cache-Control:
+              schema: { type: string, const: no-store }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OrderResponse" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+components:
+  parameters:
+    ProductSlug:
+      in: path
+      name: slug
+      required: true
+      schema: { type: string, maxLength: 120 }
+    OrderId:
+      in: path
+      name: orderId
+      required: true
+      schema: { type: string, format: uuid }
+    IdempotencyKey:
+      in: header
+      name: Idempotency-Key
+      required: true
+      schema: { type: string, minLength: 8, maxLength: 128, pattern: "^[A-Za-z0-9._:-]+$" }
+    OrderAccessKey:
+      in: header
+      name: X-Order-Access-Key
+      required: false
+      description: Required for guest requests; not used with a synthetic bearer session.
+      schema: { type: string, minLength: 43, maxLength: 43, pattern: "^[A-Za-z0-9_-]{43}$" }
+  responses:
+    BadRequest:
+      description: Invalid input or promo code
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ApiError" }
+    NotFound:
+      description: Product/order unavailable or order access key missing/invalid
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ApiError" }
+    Conflict:
+      description: Stock unavailable or idempotency key reused with changed request
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ApiError" }
+    RateLimited:
+      description: Local request limit exceeded; retry after tokens refill.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ApiError" }
+    Unauthorized:
+      description: Synthetic session is missing, invalid, expired, or revoked.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ApiError" }
+    Forbidden:
+      description: The synthetic role cannot use this customer order workflow.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ApiError" }
+  schemas:
+    SyntheticRole:
+      type: string
+      enum: [CUSTOMER, MERCHANT, SUPPORT]
+    SyntheticRoleList:
+      type: object
+      required: [roles]
+      properties:
+        roles: { type: array, minItems: 1, items: { $ref: "#/components/schemas/SyntheticRole" } }
+    SyntheticSessionRequest:
+      type: object
+      required: [role]
+      additionalProperties: false
+      properties:
+        role: { $ref: "#/components/schemas/SyntheticRole" }
+    CreatedSyntheticSession:
+      type: object
+      required: [session]
+      properties:
+        session:
+          type: object
+          required: [id, role, token, expiresAt]
+          properties:
+            id: { type: string, format: uuid }
+            role: { $ref: "#/components/schemas/SyntheticRole" }
+            token: { type: string, minLength: 43, maxLength: 43, writeOnly: true }
+            expiresAt: { type: string, format: date-time }
+    CurrentSyntheticSession:
+      type: object
+      required: [session]
+      properties:
+        session:
+          type: object
+          required: [id, role, expiresAt]
+          properties:
+            id: { type: string, format: uuid }
+            role: { $ref: "#/components/schemas/SyntheticRole" }
+            expiresAt: { type: string, format: date-time }
+    Product:
+      type: object
+      required: [id, slug, name, subtitle, description, category, priceMinor, stockQuantity, imageUrl, featured]
+      properties:
+        id: { type: string, format: uuid }
+        slug: { type: string }
+        name: { type: string }
+        subtitle: { type: string }
+        description: { type: string }
+        category: { type: string }
+        priceMinor: { type: integer, minimum: 0 }
+        stockQuantity: { type: integer, minimum: 0 }
+        imageUrl: { type: string }
+        featured: { type: boolean }
+    OrderRequest:
+      type: object
+      required: [items]
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          minItems: 1
+          maxItems: 30
+          items:
+            type: object
+            required: [productId, quantity]
+            additionalProperties: false
+            properties:
+              productId: { type: string, format: uuid }
+              quantity: { type: integer, minimum: 1, maximum: 20 }
+        promoCode: { type: [string, "null"], maxLength: 32 }
+    QuoteLine:
+      type: object
+      required: [productId, slug, name, imageUrl, quantity, unitPriceMinor, subtotalMinor, discountMinor, taxMinor, totalMinor]
+      properties:
+        productId: { type: string, format: uuid }
+        slug: { type: string }
+        name: { type: string }
+        imageUrl: { type: string }
+        quantity: { type: integer, minimum: 1 }
+        unitPriceMinor: { type: integer, minimum: 0 }
+        subtotalMinor: { type: integer, minimum: 0 }
+        discountMinor: { type: integer, minimum: 0 }
+        taxMinor: { type: integer, minimum: 0 }
+        totalMinor: { type: integer, minimum: 0 }
+    OrderQuote:
+      type: object
+      required: [lines, subtotalMinor, discountMinor, shippingMinor, taxMinor, totalMinor, taxBasisPoints, promoCode, currency]
+      properties:
+        lines: { type: array, items: { $ref: "#/components/schemas/QuoteLine" } }
+        subtotalMinor: { type: integer, minimum: 0 }
+        discountMinor: { type: integer, minimum: 0 }
+        shippingMinor: { type: integer, minimum: 0 }
+        taxMinor: { type: integer, minimum: 0 }
+        totalMinor: { type: integer, minimum: 0 }
+        taxBasisPoints: { type: integer, minimum: 0, maximum: 10000 }
+        promoCode: { type: [string, "null"] }
+        currency: { type: string, const: USD }
+    OrderLine:
+      type: object
+      required: [productId, name, imageUrl, quantity, unitPriceMinor, discountMinor, taxMinor, totalMinor]
+      properties:
+        productId: { type: string, format: uuid }
+        name: { type: string }
+        imageUrl: { type: string }
+        quantity: { type: integer, minimum: 1 }
+        unitPriceMinor: { type: integer, minimum: 0 }
+        discountMinor: { type: integer, minimum: 0 }
+        taxMinor: { type: integer, minimum: 0 }
+        totalMinor: { type: integer, minimum: 0 }
+    OrderReceipt:
+      type: object
+      required: [orderId, status, subtotalMinor, discountMinor, shippingMinor, taxMinor, totalMinor, taxBasisPoints, promoCode, currency, items, createdAt]
+      properties:
+        orderId: { type: string, format: uuid }
+        status: { type: string, enum: [CONFIRMED] }
+        subtotalMinor: { type: integer, minimum: 0 }
+        discountMinor: { type: integer, minimum: 0 }
+        shippingMinor: { type: integer, minimum: 0 }
+        taxMinor: { type: integer, minimum: 0 }
+        totalMinor: { type: integer, minimum: 0 }
+        taxBasisPoints: { type: integer, minimum: 0, maximum: 10000 }
+        promoCode: { type: [string, "null"] }
+        currency: { type: string, const: USD }
+        items: { type: array, items: { $ref: "#/components/schemas/OrderLine" } }
+        createdAt: { type: string, format: date-time }
+    OrderResponse:
+      type: object
+      required: [order, duplicate]
+      properties:
+        order: { $ref: "#/components/schemas/OrderReceipt" }
+        duplicate: { type: boolean }
+    ApiError:
+      type: object
+      required: [code, message, requestId]
+      properties:
+        code: { type: string }
+        message: { type: string }
+        requestId: { type: [string, "null"] }
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: opaque synthetic-session token

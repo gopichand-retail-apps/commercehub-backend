@@ -1,0 +1,8 @@
+.local/
+target/
+.env
+*.log
+.DS_Store
+.env.*
+!.env.example
+*.war

@@ -1,0 +1,42 @@
+name: CommerceHub Backend CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: commercehub-backend-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      - name: Set up Java
+        uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+
+      - name: Test
+        run: mvn -B verify
+
+      - name: Check Java source line length
+        run: sh scripts/check-java-lines.sh
+
+      - name: Checkstyle quality profile
+        run: mvn -B -Pquality validate
+
+      - name: Package
+        run: mvn -B -DskipTests package

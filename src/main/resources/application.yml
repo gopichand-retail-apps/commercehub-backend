@@ -7,6 +7,31 @@ server:
     include-stacktrace: never
 
 spring:
+  kafka:
+    bootstrap-servers: ${COMMERCEHUB_KAFKA_BOOTSTRAP:127.0.0.1:17992}
+    admin:
+      auto-create: false
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+      properties:
+        enable.idempotence: true
+        max.request.size: 65536
+        max.block.ms: 3000
+        delivery.timeout.ms: 4000
+        request.timeout.ms: 2000
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      enable-auto-commit: false
+      auto-offset-reset: earliest
+      max-poll-records: 25
+      properties:
+        max.partition.fetch.bytes: 65536
+        fetch.max.bytes: 262144
+    listener:
+      ack-mode: manual_immediate
   application:
     name: commercehub-api
   datasource:
@@ -28,6 +53,10 @@ app:
   environment: ${APP_ENV:development}
 
 commercehub:
+  events:
+    enabled: ${COMMERCEHUB_EVENTS_ENABLED:false}
+    workers-enabled: ${COMMERCEHUB_EVENTS_WORKERS_ENABLED:true}
+    operator-origin: ${COMMERCEHUB_OPERATOR_ORIGIN:http://127.0.0.1:17302}
   frontend-origins: "${FRONTEND_ORIGINS:http://127.0.0.1:5301,http://localhost:5301}"
   tax-basis-points: ${DEMO_TAX_BASIS_POINTS:0}
   synthetic-session-ttl: ${SYNTHETIC_SESSION_TTL:PT8H}

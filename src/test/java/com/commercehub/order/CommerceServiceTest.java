@@ -44,6 +44,7 @@ class CommerceServiceTest {
   private static final String ACCESS_KEY = "A".repeat(43);
 
   @Test
+  @org.junit.jupiter.api.DisplayName("[CMP-01] existing order validation and quantity bounds remain authoritative")
   void rejectsMissingOrdersAndMergedQuantitiesAboveTheLimit() {
     CommerceService service = service(mock(ProductCatalogService.class), mock(DemoPricingService.class),
         mock(OrderRepository.class), mock(TransactionTemplate.class));
@@ -235,7 +236,8 @@ class CommerceServiceTest {
       DemoPricingService pricing,
       OrderRepository orders,
       TransactionTemplate transactions) {
-    return new CommerceService(catalog, pricing, orders, transactions);
+    return new CommerceService(catalog, pricing, orders, transactions,
+        mock(com.commercehub.events.OrderEventWriter.class));
   }
 
   @SuppressWarnings("unchecked")

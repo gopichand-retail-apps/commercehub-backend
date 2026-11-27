@@ -1,5 +1,45 @@
 # CommerceHub Quality and Standards Status
 
+## BE-02 feature verification — November 18, 2026
+
+This is a deliberate feature on local `feature/be02-order-events`; older results below remain historical.
+The event writer/publisher/consumers/admin boundary have been added to the existing 95% critical-class
+JaCoCo gate. Overall 90% counters, original migration bytes, original checkout behavior and the frontend
+content contract are preserved. No production class is excluded, and no gate or assertion was weakened.
+
+The prior complete feature run passed 79 tests, 0 skipped, with 99.68% instructions, 99.01% branches,
+100% methods and 99.51% lines. Later real HTTP QA found a P2 Origin error-envelope defect, fixed test-first;
+the rebuilt real Kafka/PostgreSQL lab passed 30 HTTP probes. There are now 19 scenario rows and additional
+concurrent claim/consumer tests. Final 12-cycle verification under four CPU workers is running; its results
+will be appended to architecture and the program ledger. The first contention attempt failed the existing
+redacted-log test because its runner retained DEBUG as an empty environment value; the corrected runner
+removes DEBUG from child environments and preserves the failure evidence. It does not alter the caller.
+
+Five guard mutations are caught by behavioral tests; the initial confirmation mutant's compilation
+failure was corrected before counting that guard. Current source/history secret scans report no findings;
+a synthetic github-pat control is detected. YAML, PowerShell helper syntax and 8 Mermaid diagrams parse.
+Local helper startup/Enter shutdown was exercised. Hosted CI remains NOT RUN, since nothing is pushed.
+
+**Release blocker:** OSV 2.7.1 scanned 146 resolved Maven package versions (including test tools), finding
+94 package/advisory pairs across 25 versions. The earlier direct-POM scan was incomplete and superseded.
+Affected dependency lines include Jackson, Spring, Tomcat, Kafka, PostgreSQL JDBC and test dependencies.
+Findings are not suppressed, and this is not an exploitability assessment. The BE-02 prompt fixes the
+Boot 3.5.6 BOM line; a separately reviewed patch/BOM and dependency maintenance increment is needed.
+No public/production or REVIEW_READY claim follows from the passing functional checks.
+
+See [scenario QA and defects](test-scenarios.md), [owner guide](guide.md), and the
+[dated acceptance/experiment tables](architecture.md#be-02-dated-evidence-and-release-boundary).
+Idle-machine comparative tuning, operated retention/backups, production identity/ACL, public hosting,
+developer teach-backs and narrated demo remain open. Separate IT recovery work is not completed by BE-02.
+
+**Final local rerun:** `node scripts/verify-under-load.mjs 12` passed in 518,232ms: 82 tests,
+0 failures/errors/skips, Checkstyle and all coverage gates. JaCoCo instructions **99.6851%**, branches
+**99.0385%**, methods **100%**, lines **99.5255%**. Twelve seeded crash cycles and the additional
+four-client load profile finished with 82 orders/effects consistent and zero remaining lag/backlog/quarantine.
+All task-owned processes stopped and four ports were free afterward. This supersedes the running status
+above. Detailed source-safe results: [evidence/be02-local-2026-11-18.json](evidence/be02-local-2026-11-18.json).
+The dependency gate still fails; status remains IN_PROGRESS, M5. The existing rules are unchanged.
+
 Scope: APP-02 CommerceHub, reviewed against `AGENTS.md` and the supplied portfolio master playbook on 2026-11-01. This records verified checks and remaining gaps; it is not a security certification or legal opinion.
 
 ## Verified in this local demo

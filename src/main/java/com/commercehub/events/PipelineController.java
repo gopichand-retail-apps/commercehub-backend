@@ -34,7 +34,9 @@ public class PipelineController {
       @Value("${commercehub.events.operator-origin}") String origin, BrokerProbe broker) {
     URI uri = URI.create(origin);
     if (!"http".equals(uri.getScheme()) || !Set.of("127.0.0.1", "localhost").contains(uri.getHost()) ||
-        !origin.equals("http://" + uri.getAuthority())) throw new IllegalArgumentException("Local operator origin required");
+        !origin.equals("http://" + uri.getAuthority())) {
+      throw new IllegalArgumentException("Local operator origin required");
+    }
     this.admin = admin;
     this.sessions = sessions;
     this.limiter = limiter;

@@ -1,0 +1,130 @@
+{
+    "date":  "2026-11-18",
+    "branch":  "feature/be02-order-events",
+    "baseRevision":  "7d65634bd800d339c5bed3623ec801eab7534eb6",
+    "status":  "IN_PROGRESS",
+    "milestone":  "M5",
+    "tests":  {
+                  "scenarios":  19,
+                  "liveHttpChecks":  30,
+                  "skipped":  0,
+                  "failed":  0,
+                  "passed":  82
+              },
+    "javaCoveragePercent":  {
+                                "BRANCH":  99.0385,
+                                "METHOD":  100,
+                                "INSTRUCTION":  99.6851,
+                                "LINE":  99.5255
+                            },
+    "cpuContention":  {
+                          "workers":  4,
+                          "crashCycles":  12,
+                          "mavenPid":  44848,
+                          "elapsedMs":  518232,
+                          "exitCode":  0
+                      },
+    "processRecovery":  {
+                            "stockInvariant":  true,
+                            "seed":  20261118,
+                            "latencies":  [
+                                              {
+                                                  "p50ms":  187.015,
+                                                  "p95ms":  431.896,
+                                                  "run":  1,
+                                                  "count":  12
+                                              },
+                                              {
+                                                  "p50ms":  174.844,
+                                                  "p95ms":  466.387,
+                                                  "run":  2,
+                                                  "count":  12
+                                              },
+                                              {
+                                                  "p50ms":  230.195,
+                                                  "p95ms":  479.107,
+                                                  "run":  3,
+                                                  "count":  12
+                                              },
+                                              {
+                                                  "p50ms":  127.924,
+                                                  "p95ms":  468.149,
+                                                  "run":  4,
+                                                  "count":  20
+                                              }
+                                          ],
+                            "brokerHealth":  {
+                                                 "broker":  {
+                                                                "brokerReady":  true,
+                                                                "consumerLag":  {
+                                                                                    "notification":  0,
+                                                                                    "reporting":  0
+                                                                                },
+                                                                "errorCode":  null,
+                                                                "observedAt":  "2026-11-18T06:58:54.394167700Z"
+                                                            },
+                                                 "database":  {
+                                                                  "quarantined":  0,
+                                                                  "quarantinedRecords":  [
+
+                                                                                         ],
+                                                                  "consumers":  [
+                                                                                    {
+                                                                                        "consumer_name":  "notification",
+                                                                                        "last_success":  "2026-11-18T06:58:53.926+00:00",
+                                                                                        "duplicate_count":  2
+                                                                                    },
+                                                                                    {
+                                                                                        "consumer_name":  "reporting",
+                                                                                        "last_success":  "2026-11-18T06:58:53.926+00:00",
+                                                                                        "duplicate_count":  2
+                                                                                    }
+                                                                                ],
+                                                                  "backlog":  0,
+                                                                  "publisher":  {
+                                                                                    "last_confirmation":  "2026-11-18T06:58:53.917+00:00"
+                                                                                },
+                                                                  "observedAt":  "2026-11-18T06:58:54.275915300Z",
+                                                                  "exhausted":  0,
+                                                                  "pendingAge":  {
+                                                                                     "oldest_pending":  null
+                                                                                 }
+                                                              }
+                                             },
+                            "catchupMs":  19108.2238,
+                            "orders":  82,
+                            "evidenceRun":  "4df29c92-ca43-4708-ad5b-18426d2e1b29",
+                            "crashCycles":  12,
+                            "load":  "3 warmup, 3x12 sequential orders, then 20 orders on 4 clients; fixed 500ms poll/25 batch"
+                        },
+    "mutations":  {
+                      "sourceBytesRestored":  true,
+                      "caught":  5,
+                      "attempted":  5
+                  },
+    "secrets":  {
+                    "commitsScanned":  2,
+                    "positiveControlDetected":  true,
+                    "positiveControl":  "github-pat",
+                    "historyFindings":  0,
+                    "sourceFindings":  0
+                },
+    "dependencies":  {
+                         "resolvedVersions":  146,
+                         "gate":  "FAIL",
+                         "affectedVersions":  25,
+                         "scanner":  "OSV 2.7.1",
+                         "advisoryPairs":  94
+                     },
+    "artifactSha256":  "7562208e00c1fdc08e0c1efc9339280a637770ca0cb6bf456e37ddb4c2673331",
+    "notRun":  [
+                   "hosted CI",
+                   "Linux service containers",
+                   "exact commit-to-broker-ACK timing",
+                   "idle comparative tuning",
+                   "human teach-backs",
+                   "narrated demo",
+                   "public release",
+                   "IT recovery completion"
+               ]
+}

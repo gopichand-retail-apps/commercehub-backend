@@ -19,6 +19,21 @@
   </properties>
   <dependencies>
     <dependency>
+      <groupId>org.springframework.kafka</groupId>
+      <artifactId>spring-kafka</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.kafka</groupId>
+      <artifactId>spring-kafka-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.zonky.test</groupId>
+      <artifactId>embedded-postgres</artifactId>
+      <version>2.2.2</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>
     </dependency>
@@ -116,6 +131,7 @@
                   <element>CLASS</element>
                   <includes>
                     <include>com.commercehub.order.*</include>
+                    <include>com.commercehub.events.*</include>
                     <include>com.commercehub.catalog.ProductCatalogService</include>
                     <include>com.commercehub.security.SyntheticSessionService</include>
                   </includes>
@@ -161,6 +177,20 @@
     </plugins>
   </build>
   <profiles>
+    <profile>
+      <id>external-engine</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-failsafe-plugin</artifactId>
+            <executions>
+              <execution><goals><goal>integration-test</goal><goal>verify</goal></goals></execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
     <profile>
       <id>quality</id>
       <build>

@@ -324,6 +324,28 @@ Deliver runnable app, ERD, C4 context/container diagrams, key sequence diagram, 
 
 
 ## Authoritative references for the agent
+
+### Additive authentication standard — owner instruction, November 18, 2026
+
+Apply these controls to real authentication changes; the published baseline's synthetic identities are
+not real customer authentication. Reuse the existing Supabase Auth implementation in the separate IT line
+when working there; do not add an independent password database or replace the provider incidentally.
+
+- Validate every untrusted server field, header, query and provider response using explicit types,
+  lengths/ranges and writable-field allowlists. Bind SQL parameters. Encode output for its context.
+  Generic input "cleaning" does not replace these controls; never trim or modify a password silently.
+- Limit login/recovery/registration attempts with bounded per-account and aggregate budgets, safe
+  network signals and temporary cooldowns. Avoid permanent attacker-triggerable account locks; document
+  provider limits and process-local versus distributed enforcement. Do not trust forwarding headers.
+- Never persist/log plaintext passwords, reversible password encryption or fast password hashes.
+  A maintained Auth provider owns password hashing. Hashing high-entropy opaque tokens is a different use case.
+- Failed sign-in uses one generic incorrect-email-or-password response. Recovery/registration do not
+  reveal account existence. Do not return raw provider errors or falsely report success during an outage.
+- Use maintained provider verification, bounded recovery, exact redirects, PKCE, secure cookies,
+  Origin/CSRF protection and tested revocation. User-editable roles/metadata never grant authority.
+- Test hostile inputs, enumeration, quotas/cooldown, expiry/replay, outage/partial failure and two-user
+  isolation with synthetic data. No credentials, hosted settings or real accounts are changed by BE-02.
+
 - OWASP ASVS 5.0: https://github.com/OWASP/ASVS
 - OWASP Cheat Sheets: https://cheatsheetseries.owasp.org/
 - OWASP API Security: https://owasp.org/API-Security/

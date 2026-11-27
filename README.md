@@ -2,6 +2,25 @@
 
 ![CI](https://github.com/gopichand-retail-apps/commercehub-backend/actions/workflows/ci.yml/badge.svg)
 
+## Optional local Kafka order-event pipeline (BE-02)
+
+This backend now has an owner-requested, off-by-default transactional outbox, confirmed/retried Kafka
+publisher, two independent inbox-protected consumers, safe quarantine and local Support inspection/replay.
+Orders and payments remain synthetic; no other app or hosted Supabase database is connected. The newer
+IT authentication/recovery work is a separate source line and is not included in this feature branch.
+
+Start with [the owner guide](docs/guide.md), [scenario catalogue](docs/test-scenarios.md), and
+[learning questions](docs/learning.md). Testing starts from failure scenarios, then enforces the existing
+90% overall / 95% critical per-class Java coverage gates. The normal H2 demo needs no Kafka.
+For the disposable real Kafka/PostgreSQL lab, run `scripts/Run-EventLab.ps1` as documented in the guide.
+`COMMERCEHUB_EVENTS_ENABLED=true` opts into event writing; `COMMERCEHUB_EVENTS_WORKERS_ENABLED=false`
+can deliberately retain events without starting workers. Never point the lab at existing/hosted data.
+
+Run one scenario with `mvn -B -Dtest=OutboxWorkflowTest#rollback test`; run all gates with
+`mvn -B -Pquality -Dspring.profiles.active=test verify`. Actual outcomes and unresolved dependency/release
+gates are recorded in [architecture](docs/architecture.md) and [quality status](docs/quality-status.md).
+No commit, push, deployment or public production readiness is implied.
+
 [Architecture guide](docs/architecture.md) — source map, workflows, contracts, data, security, and checks.
 
 ## Repository layout and deployment boundary

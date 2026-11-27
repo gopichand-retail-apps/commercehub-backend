@@ -1,6 +1,7 @@
 package com.commercehub.order;
 
 import com.commercehub.api.CommerceException;
+import com.commercehub.events.OrderEventWriter;
 import com.commercehub.catalog.Product;
 import com.commercehub.catalog.ProductCatalogService;
 import com.commercehub.order.OrderRepository.StoredOrder;
@@ -36,16 +37,18 @@ public class CommerceService {
   private final DemoPricingService pricing;
   private final OrderRepository orders;
   private final TransactionTemplate transactions;
+  private final OrderEventWriter events;
 
   public CommerceService(
       ProductCatalogService catalog,
       DemoPricingService pricing,
       OrderRepository orders,
-      TransactionTemplate transactions) {
+      TransactionTemplate transactions, OrderEventWriter events) {
     this.catalog = catalog;
     this.pricing = pricing;
     this.orders = orders;
     this.transactions = transactions;
+    this.events = events;
   }
 
   public QuoteResponse quote(CommerceRequests.Order request) {
@@ -111,6 +114,7 @@ public class CommerceService {
     orders.insertOrder(orderId, accessKeyHash, idempotencyKey, requestHash, ownerSessionId, quote);
     quote.lines().forEach(line -> orders.insertLine(orderId, line));
     OrderReceipt receipt = orders.findReceipt(orderId).orElseThrow();
+    events.append(receipt);
     logOrderCreated(orderId, quote);
     return new OrderResponse(receipt, false);
   }

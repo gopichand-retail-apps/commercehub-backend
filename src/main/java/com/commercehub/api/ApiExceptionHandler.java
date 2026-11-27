@@ -27,6 +27,7 @@ public class ApiExceptionHandler {
       MethodArgumentNotValidException.class,
       HandlerMethodValidationException.class,
       ConstraintViolationException.class,
+      org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class,
       MissingRequestHeaderException.class
   })
   public ResponseEntity<ApiErrorResponse> handleInvalidRequest(Exception exception) {

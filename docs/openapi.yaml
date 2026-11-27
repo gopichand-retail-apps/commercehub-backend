@@ -7,6 +7,79 @@ servers:
   - url: http://127.0.0.1:5302
     description: Local Spring Boot API
 paths:
+  /api/v1/admin/outbox:
+    get:
+      summary: Inspect local event delivery metadata without payloads
+      operationId: inspectOutbox
+      description: Events enabled only. Loopback peer, exact configured Host and synthetic SUPPORT bearer required.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { in: query, name: state, schema: { type: string, enum: [pending, failed, published], default: pending } }
+        - { in: query, name: page, schema: { type: integer, minimum: 0, maximum: 1000, default: 0 } }
+        - { in: query, name: size, schema: { type: integer, minimum: 1, maximum: 100, default: 25 } }
+      responses:
+        "200":
+          description: Stable chronological page; no-store; identifiers, attempts, timestamps and safe error code only
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [events, page, size]
+                properties:
+                  page: { type: integer }
+                  size: { type: integer }
+                  events:
+                    type: array
+                    items:
+                      type: object
+                      required: [eventId, aggregateId, attemptCount, occurredAt, nextAttemptAt]
+                      properties:
+                        eventId: { type: string, format: uuid }
+                        aggregateId: { type: string, format: uuid }
+                        attemptCount: { type: integer }
+                        occurredAt: { type: string, format: date-time }
+                        publishedAt: { type: [string, "null"], format: date-time }
+                        nextAttemptAt: { type: string, format: date-time }
+                        lastErrorCode: { type: [string, "null"] }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+  /api/v1/admin/event-pipeline/health:
+    get:
+      summary: Read a dated local database and broker delivery sample
+      operationId: inspectEventPipeline
+      description: >-
+        Same local SUPPORT boundary as outbox. Database sample includes backlog, exhausted attempts, oldest
+        pending time, last confirmation, consumer success times and duplicate counters. Broker sample is bounded;
+        unavailable status returns brokerReady=false, an empty lag map and safe error code, never invented zero lag.
+        Each consumer lag is end offset minus committed offset across the topic partitions. Null times mean no sample.
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200": { description: No-store dated database and broker samples; inspect timestamps and error codes }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+  /api/v1/admin/event-pipeline/retry/{eventId}:
+    post:
+      summary: Request an audited replay from the trusted outbox event
+      operationId: retryEvent
+      description: >-
+        Local SUPPORT only; exact configured Origin and Host required. No request body. Five requests per
+        session per minute, at most 4096 active budgets without eviction. Idempotency key is globally bound to
+        one event. Active leased or corrupt source rows conflict. Resets exhausted attempts and schedules the
+        original stored payload, including already-published events; consumer inboxes preserve prior effects.
+        Unknown poison without a trusted source event cannot be replayed or edited through this endpoint.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { in: path, name: eventId, required: true, schema: { type: string, format: uuid } }
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200": { description: No-store eventId, retryRequested=true and duplicate boolean; duplicate keys do not reschedule }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "429": { $ref: "#/components/responses/RateLimited" }
   /health:
     get:
       summary: Health check
